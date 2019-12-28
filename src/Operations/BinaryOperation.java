@@ -43,6 +43,13 @@ class BinaryOperation extends Operation {
             return order;
         }
 
+        /**
+         * checks if opString is a valid operand of order 'order'
+         *
+         * @param order the number in the order of operations
+         * @param opString a possible operand
+         * @return true if opString is a valid operand of order 'order'
+         */
         public static boolean matchesOperand(int order, String opString) {
             if (opString.length() > 1) throw new InputMismatchException("Operand representation can only be a single character.");
             for (Operand operand : Operand.values()) {
@@ -53,6 +60,11 @@ class BinaryOperation extends Operation {
             return false;
         }
 
+        /**
+         *
+         * @param opString a possible operand
+         * @return Operand object if one exists with op 'opString'
+         */
         static Operand getOperand(char opString) {
             for (Operand operand : Operand.values()) {
                 if (operand.op == opString) {
@@ -74,6 +86,12 @@ class BinaryOperation extends Operation {
         this.b = b;
     }
 
+    /**
+     * calculates the result of this BinaryOperation
+     * uses recursive calls if necessary
+     *
+     * @return the result or 0.0 if the object wasn't correctly initiated (normally impossible)
+     */
     @Override
     double calculate() {
         switch (operand) {

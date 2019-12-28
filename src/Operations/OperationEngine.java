@@ -2,7 +2,7 @@ package Operations;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.InputMismatchException;
 import java.util.List;
 
 /**
@@ -12,71 +12,61 @@ import java.util.List;
 
 public class OperationEngine {
     private Operation operation;
-    private StringBuilder operandsRegex;
+    private String operandsRegex;
+    private String doubleRegex;
+    private String opString;
 
     public OperationEngine(String input, boolean print) {
         BinaryOperation.Operand[] operands = BinaryOperation.Operand.values();
-        this.operandsRegex = new StringBuilder("[");
+        StringBuilder temp = new StringBuilder("([");
+        // create operandsRegex
         for (BinaryOperation.Operand operand : operands) {
             if (operand.getOp() == '-' || operand.getOp() == '^') {
-                operandsRegex.append("\\").append(operand.getOp());
+                temp.append("\\").append(operand.getOp());
             } else {
-                operandsRegex.append(operand.getOp());
+                temp.append(operand.getOp());
             }
         }
-        operandsRegex.append("]");
-        String opRegex = "[0-9]+(.[0-9]*)?( " + operandsRegex + " [0-9]+(.[0-9]*)?)*";
-        List<Operation> temp = new ArrayList<>();
-        this.operation = createOperation(new ArrayList<>(Arrays.asList(input.split(" "))), temp);
-//        if (input.matches(opRegex)) {
-//            if (print) System.out.println(input);
-//            List<String> opString = addParentheses(input);
-//            if (print) System.out.println(" = " + opString.toString().replaceAll("[,\\[\\]]", ""));
-//            this.operation = createOp(opString);
-//        } else {
-//            throw new InputMismatchException("\nInput \"" + input + "\" contains invalid characters.\n" +
-//                    "It can only contain numbers or " + operandsRegex + ", all separated by a space.");
-//        }
+        this.operandsRegex = temp.append("])").toString();
+        this.doubleRegex = "([0-9]+(\\.[0-9]*)?)";
+        this.opString = input;
+        try {            
+            if (validateOperationString()) {
+                if (print) System.out.println(opString);
+                this.operation = createOperation(new ArrayList<>(Arrays.asList(opString.split(" "))), new ArrayList<>());
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     /**
-     * creates an operation based on a string
-     * order of operations is defined by parentheses
+     * validates the input string of the constructor:
      *
-     * @param input list of inputString
-     * @return BinaryOperation or Operation object
+     * @return true if 'input' is a valid operation string
      */
-    private Operation createOp(List<String> input) {
-        if (input.size() == 0) throw new NullPointerException("Input is an empty array.");
-        if (input.size() == 1) {
-            if (input.get(0).contains("(")) {
-                String noParentheses = input.get(0).substring(1, input.get(0).length() - 1);
-                if (noParentheses.charAt(0) == '(') {
-                    List<String> temp = new ArrayList<>();
-                    temp.add(noParentheses.replaceAll("(\\(.*\\)).*", "$1"));
-                    temp.addAll(Arrays.asList(noParentheses.replaceAll("( \\(.*\\))|(\\(.*\\) )", "")
-                            .split(" ")));
-                    return createOp(temp);
-                } else if (noParentheses.charAt(noParentheses.length() - 1) == ')') {
-                    List<String> temp = new ArrayList<>(Arrays.asList(noParentheses
-                            .replaceAll("( \\(.*\\))|(\\(.*\\) )", "").split(" ")));
-                    temp.add(noParentheses.replaceAll("(\\(.*\\)).*", "$1"));
-                    return createOp(temp);
-                } else {
-                    return createOp(new ArrayList<>(Arrays.asList(noParentheses.split(" "))));
-                }
-            } else {
-                return new Operation(Double.parseDouble(input.get(0)));
-            }
+    private boolean validateOperationString() {
+        // - check if string is empty
+        if (opString.length() == 0) throw new InputMismatchException("\nInput \"" + opString + "\" is an empty String.");
+        // - replace all ',' separators with a '.' separator so Double.parseDouble() detects the correct separator
+        opString = opString.replaceAll(",", ".");
+        // - check for invalid characters
+        if (!opString.matches("( |\\(|\\)|" + doubleRegex + "|" + operandsRegex + ")+")) {
+            throw new InputMismatchException("\nInput \"" + opString + "\" contains invalid characters.\n" +
+                    "It can only contain numbers, " + operandsRegex + ", parentheses or spaces.");
         }
-        Operation lastOp = createOp(new ArrayList<>(Collections.singleton(input.get(0))));
-        for (int i = 0; i < input.size(); i++) {
-            if (input.get(i).matches(operandsRegex.toString())) {
-                lastOp = new BinaryOperation(lastOp, input.get(i).charAt(0),
-                        createOp(new ArrayList<>(Collections.singleton(input.get(i + 1)))));
-            }
+        // - add spaces where needed and remove unnecessary spaces
+        opString = opString.replaceAll("(" + doubleRegex + "|" + operandsRegex + ")", " $0 ");
+        opString = opString.replaceAll("\\s{2,}", " ");
+        opString = opString.replaceAll("(\\A[ ]+)|([ ]+\\z)", "");
+        // - check if operations without the parentheses are correct
+        String noParentheses = this.opString.replaceAll("(\\( )|( \\))", "");
+        if (!noParentheses.matches(doubleRegex + "( " + operandsRegex + " " + doubleRegex + ")*")) {
+            throw new InputMismatchException("\nInput \"" + opString + "\" without parentheses isn't a valid operation. \n" +
+                    "A valid operation should start with a number, possibly followed by multiple pairs of an operand and a number.");
         }
-        return lastOp;
+        // - check if parentheses are placed correctly (for every opening '(' a closing ')')
+        return true;
     }
 
     /**
@@ -142,40 +132,6 @@ public class OperationEngine {
     }
 
     /**
-     * creates an order of operations by adding parentheses where needed
-     *
-     * @param input inputString
-     * @return list of input string with added "()", operands are surrounded by spaces
-     */
-    private static List<String> addParentheses(String input) {
-        if (input.length() == 0) throw new NullPointerException("Input is an empty string.");
-        List<String> list = Arrays.asList(input.split(" "));
-        if (!input.contains("*") && !input.contains("/")) {
-            return list;
-        }
-        boolean done = false;
-        while (!done) {
-            List<String> temp = new ArrayList<>(list);
-            for (int i = 0; i <= list.size(); i++) {
-                if (i == list.size()) {
-                    done = true;
-                    break;
-                }
-                if (list.get(i).equals("*") || list.get(i).equals("/")) {
-                    String op = "(" + list.get(i - 1) + " " + list.get(i) + " " + list.get(i + 1) + ")";
-                    temp.remove(i - 1);
-                    temp.remove(i - 1);
-                    temp.remove(i - 1);
-                    temp.add(i - 1, op);
-                    break;
-                }
-            }
-            list = new ArrayList<>(temp);
-        }
-        return list;
-    }
-
-    /**
      * calculates the total from operation
      *
      * @return the result
@@ -186,11 +142,10 @@ public class OperationEngine {
 
     public static void main(String[] args) {
         String[] inputs = new String[]{
-                "( 100 - 50 ) / 5 ^ 2", "50 + 10 + 20 - 30", "7 / 7 + 8 / 8", "4 + 50 * 50 / 10", "500", "8 ^ 2"
+                " (100.0-50)/(5^2)", "50 + 10 + 20 - 30", "7 / 7 + 8 / 8", "4 + 50 * 50 / 10", "500", "8 ^ 2"
         };
         for (String input : inputs) {
             try {
-                System.out.println(input);
                 System.out.println(" = " + new OperationEngine(input, true).calculate() + "\n");
             } catch (Exception ex) {
                 ex.printStackTrace();
