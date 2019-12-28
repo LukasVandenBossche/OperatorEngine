@@ -6,7 +6,6 @@ Examples:
 - "50 / 5 ^ 2" = 50 / 5 ^ 2 = 2.0
 
 The engine can read:
-- doubles as input
-- parentheses
-- the following operands: + - / * % ^ √
-  which are: Addition, Subtraction, Multiplication, Division, Modulus, Exponents, and Roots
+- Doubles
+- Addition(+), Subtraction(-), Multiplication(*), Division(/), Modulus(%), Exponents(^), and Roots(√)
+- Parentheses
