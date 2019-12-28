@@ -6,7 +6,7 @@ import java.util.InputMismatchException;
 import java.util.List;
 
 /**
- * @author lukas on 19/12/2019
+ * @author LukasVandenBossche on 19/12/2019
  * @project OperatorEngine
  */
 
@@ -16,6 +16,12 @@ public class OperationEngine {
     private String doubleRegex;
     private String opString;
 
+    /**
+     * creates the Operation from the input String
+     *
+     * @param input a String
+     * @param print if true the constructor will print the reformatted input String if it's valid
+     */
     public OperationEngine(String input, boolean print) {
         BinaryOperation.Operand[] operands = BinaryOperation.Operand.values();
         StringBuilder temp = new StringBuilder("([");
@@ -141,6 +147,7 @@ public class OperationEngine {
     }
 
     public static void main(String[] args) {
+        // examples
         String[] inputs = new String[]{
                 " (100.0-50)/(5^2)", "50 + 10 + 20 - 30", "7 / 7 + 8 / 8", "4 + 50 * 50 / 10", "500", "8 ^ 2"
         };

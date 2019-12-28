@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.InputMismatchException;
 
 /**
- * @author lukas on 19/12/2019
+ * @author LukasVandenBossche on 19/12/2019
  * @project OperatorEngine
  */
 
@@ -79,6 +79,12 @@ class BinaryOperation extends Operation {
     private Operand operand;
     private Operation b;
 
+    /**
+     *
+     * @param a unary Operation or BinaryOperation object
+     * @param opString operand character for this operation
+     * @param b unary Operation or BinaryOperation object
+     */
     BinaryOperation(Operation a, char opString, Operation b) {
         super(0);
         this.a = a;
